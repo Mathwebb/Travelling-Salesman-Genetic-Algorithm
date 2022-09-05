@@ -47,7 +47,7 @@ def population_generator(size, graph):
     return population
 
 
-def natural_selection(population, selection_size, tournament_size):
+def tournament_selection(population, selection_size, tournament_size):
     selected = []
     for i in range(selection_size):
         tounament = random.sample(population, tournament_size)
@@ -87,7 +87,7 @@ def mutation(individual, mutation_rate):
 
 
 def generate_new_population(population, selection_size, mutation_rate, elite_size, tournament_size):
-    selected_pop = natural_selection(population, selection_size, tournament_size)
+    selected_pop = tournament_selection(population, selection_size, tournament_size)
     new_population = []
     population.sort(key=fitness, reverse=True)
     for i in range(elite_size):
