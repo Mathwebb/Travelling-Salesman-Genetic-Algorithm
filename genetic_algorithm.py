@@ -30,14 +30,18 @@ class Graph:
         return inf
 
 
+# Calcula o fitness de um indivíduo
 def fitness(individual):
     total_distance = 0
+    # A distancia total é a soma das distâncias entre todas as cidades da rota
+    # O calculo não leva em consideração a volta para a cidade inicial
     for i in range(1, len(individual)):
         total_distance += graph.distance(individual[i-1], individual[i])
     # total_distance += graph.distance(individual[-1], individual[0])
     return 1/total_distance
 
 
+# Gera uma população inicial aleatória
 def population_generator(size, graph):
     population = []
     for i in range(size):
@@ -47,6 +51,7 @@ def population_generator(size, graph):
     return population
 
 
+# Seleciona os indivíduos que vão gerar a nova população através do método de seleção por torneio
 def tournament_selection(population, selection_size, tournament_size):
     selected = []
     for i in range(selection_size):
@@ -55,29 +60,36 @@ def tournament_selection(population, selection_size, tournament_size):
     return selected
 
 
+# Realiza o crossover de dois indivíduos
 def crossover(parent1, parent2):
     child = []
     childP1 = []
     childP2 = []
-    
+    # Gera um ponto de corte aleatório, ou seja, dois genes aleatórios que serão
+    # utilizados para pegar uma fatia do indivíduo 1
     gene1 = int(random.random() * len(parent1))
     gene2 = int(random.random() * len(parent1))
-    
+    # Garante que o ponto de corte 1 é menor que o ponto de corte 2
     startGene = min(gene1, gene2)
     endGene = max(gene1, gene2)
-
+    # Pega a fatia gerada pelos pontos de corte do indivíduo 1 e adiciona a primeira parte do filho
     for i in range(startGene, endGene):
         childP1.append(parent1[i])
-        
+    # Gera uma fatia com os genes do indivíduo 2 que não estão presentes na fatia do indivíduo 1
     childP2 = [item for item in parent2 if item not in childP1]
-
+    # Pega os genes do indivíduo 2 que não estão na fatia do indivíduo 1 e adiciona ao filho
+    # Como é o problema do caixeiro viajante é possível garantir que todos os genes estarão presentes no filho
     child = childP1 + childP2
     return child
 
 
+# Realiza a mutação de um indivíduo
 def mutation(individual, mutation_rate):
+    # Percorre o indivíduo gene a gene, verificando se o gene em questão sofrerá mutação,
+    # ou seja, se o valor aleatório gerado é menor que a taxa de mutação
     for swapped in range(len(individual)):
         if(random.random() < mutation_rate):
+            # A mutação é feita trocando o gene em questão por outro aleatório (trocando duas cidades de lugar)
             swap_with = int(random.random() * len(individual))    
             gene1 = individual[swapped]
             gene2 = individual[swap_with]
@@ -86,13 +98,18 @@ def mutation(individual, mutation_rate):
     return individual
 
 
+# Gera uma nova população a partir da população atual
 def generate_new_population(population, selection_size, mutation_rate, elite_size, tournament_size):
+    # Utiliza o método de seleção por torneio para escolher os indivíduos que serão selecionados gerar a nova população
     selected_pop = tournament_selection(population, selection_size, tournament_size)
     new_population = []
     population.sort(key=fitness, reverse=True)
+    # Passa os melhores indivíduos (elite) para a próxima geração
     for i in range(elite_size):
         new_population.append(population[i])
+    # Cria os novos indivíduos que vão fazer parte da próxima geração através do crossover e mutação
     while len(new_population) < len(population):
+        # Seleciona dois indivíduos aleatórios da população selecionada
         parent1 = random.choice(selected_pop)
         parent2 = random.choice(selected_pop)
         child = crossover(parent1, parent2)
@@ -101,6 +118,7 @@ def generate_new_population(population, selection_size, mutation_rate, elite_siz
     return new_population
 
 
+# Executa o algoritmo genético para o problema do caixeiro viajante
 def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size, tournament_size, generations, estagnation_percentage=0.65):
     resume_execution = True
     for i in range(generations):
@@ -118,6 +136,7 @@ def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size
             print("Pior indivíduo: ", pop[-1])
             print("Pior aptidão: ", fitness(pop[-1]))
             print("------------------------------------------------")
+        # Gera uma nova população a cada geração do algoritmo genético
         population = generate_new_population(population, selection_size, mutation_rate, elite_size, tournament_size)
         pop = population.copy()
         pop.sort(key=fitness, reverse=True)
@@ -126,7 +145,9 @@ def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size
         for individual in pop:
             if fitness(individual) == best_fitness:
                 best_pops += 1
-        if best_pops == estagnation_percentage*len(pop):
+        # Verifica se a porcentagem de indivíduos com a melhor aptidão é maior que a porcentagem de estagnação
+        # Caso seja, o algoritmo é encerrado
+        if best_pops/len(pop) >= estagnation_percentage:
             print("\nGerações: ", i)
             return population
     print("\nGerações: ", generations)
@@ -148,7 +169,7 @@ if __name__ == "__main__":
     graph.add_edge(5, 6, 8)
     
     population = population_generator(100, graph)
-    population = travelling_salesman_GA(population, 50, 0.01, 6, 10, 10000, 0.5)
+    population = travelling_salesman_GA(population, 50, 0.01, 6, 10, 10000, 0.65)
     population.sort(key=fitness, reverse=True)
     print("Resultado final:")
     print("Melhor indivíduo: ", population[0])
