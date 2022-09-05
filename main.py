@@ -14,7 +14,7 @@ graph.add_edge(4, 6, 25)
 graph.add_edge(5, 6, 8)
 
 population = population_generator(100, graph)
-population = genetic_algorithm(population, 50, 0.01, 6, 100000)
+population = travelling_salesman_GA(population, 50, 0.01, 6, 100000)
 population.sort(key=fitness, reverse=True)
 print(len(population))
 for individual in population:

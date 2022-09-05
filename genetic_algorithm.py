@@ -29,10 +29,12 @@ class Graph:
                 return vertex[1]
         return inf
 
+
 def fitness(individual):
     total_distance = 0
     for i in range(1, len(individual)):
         total_distance += graph.distance(individual[i-1], individual[i])
+    # total_distance += graph.distance(individual[-1], individual[0])
     return 1/total_distance
 
 
@@ -44,23 +46,25 @@ def population_generator(size, graph):
         population.append(individual)
     return population
 
-def natural_selection(population, size_of_selection, tournament_size):
+
+def natural_selection(population, selection_size, tournament_size):
     selected = []
-    for i in range(size_of_selection):
+    for i in range(selection_size):
         tounament = random.sample(population, tournament_size)
         selected.append(max(tounament, key=fitness))
     return selected
+
 
 def crossover(parent1, parent2):
     child = []
     childP1 = []
     childP2 = []
     
-    geneA = int(random.random() * len(parent1))
-    geneB = int(random.random() * len(parent1))
+    gene1 = int(random.random() * len(parent1))
+    gene2 = int(random.random() * len(parent1))
     
-    startGene = min(geneA, geneB)
-    endGene = max(geneA, geneB)
+    startGene = min(gene1, gene2)
+    endGene = max(gene1, gene2)
 
     for i in range(startGene, endGene):
         childP1.append(parent1[i])
@@ -74,18 +78,16 @@ def crossover(parent1, parent2):
 def mutation(individual, mutation_rate):
     for swapped in range(len(individual)):
         if(random.random() < mutation_rate):
-            swapWith = int(random.random() * len(individual))
-            
-            city1 = individual[swapped]
-            city2 = individual[swapWith]
-            
-            individual[swapped] = city2
-            individual[swapWith] = city1
+            swap_with = int(random.random() * len(individual))    
+            gene1 = individual[swapped]
+            gene2 = individual[swap_with]
+            individual[swapped] = gene2
+            individual[swap_with] = gene1
     return individual
 
 
-def generate_new_population(population, selection_size, mutation_rate, elite_size):
-    selected_pop = natural_selection(population, selection_size, 5)
+def generate_new_population(population, selection_size, mutation_rate, elite_size, tournament_size):
+    selected_pop = natural_selection(population, selection_size, tournament_size)
     new_population = []
     population.sort(key=fitness, reverse=True)
     for i in range(elite_size):
@@ -99,10 +101,24 @@ def generate_new_population(population, selection_size, mutation_rate, elite_siz
     return new_population
 
 
-def genetic_algorithm(population, selection_size, mutation_rate, elite_size, generations):
+def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size, tournament_size, generations, estagnation_percentage=0.65):
+    resume_execution = True
     for i in range(generations):
-        # print(i)
-        population = generate_new_population(population, selection_size, mutation_rate, elite_size)
+        if resume_execution:
+            tecla = input("Pressione R para resumir a execução, Enter para continuar a visualização: ")
+            if tecla == 'r' or tecla == 'R':
+                resume_execution = False
+                continue
+            pop = population.copy()
+            pop.sort(key=fitness, reverse=True)
+            print("Geração: ", i)
+            print("Melhor indivíduo: ", pop[0])
+            print("Melhor aptidão: ", fitness(pop[0]))
+            print("Média de aptidão: ", sum([fitness(individual) for individual in pop])/len(pop))
+            print("Pior indivíduo: ", pop[-1])
+            print("Pior aptidão: ", fitness(pop[-1]))
+            print("------------------------------------------------")
+        population = generate_new_population(population, selection_size, mutation_rate, elite_size, tournament_size)
         pop = population.copy()
         pop.sort(key=fitness, reverse=True)
         best_fitness = fitness(population[0])
@@ -110,9 +126,10 @@ def genetic_algorithm(population, selection_size, mutation_rate, elite_size, gen
         for individual in pop:
             if fitness(individual) == best_fitness:
                 best_pops += 1
-        if best_pops == 0.65*len(pop):
-            print(i)
-            break
+        if best_pops == estagnation_percentage*len(pop):
+            print("\nGerações: ", i)
+            return population
+    print("\nGerações: ", generations)
     return population
 
 
@@ -131,8 +148,26 @@ if __name__ == "__main__":
     graph.add_edge(5, 6, 8)
     
     population = population_generator(100, graph)
-    population = genetic_algorithm(population, 50, 0.01, 6, 100000)
+    population = travelling_salesman_GA(population, 50, 0.01, 6, 10, 10000, 0.5)
     population.sort(key=fitness, reverse=True)
-    print(len(population))
+    print("Resultado final:")
+    print("Melhor indivíduo: ", population[0])
+    print("Melhor aptidão: ", fitness(population[0]))
+    print("Média de aptidão: ", sum([fitness(individual) for individual in population])/len(population))
+    print("Pior indivíduo: ", population[-1])
+    print("Pior aptidão: ", fitness(population[-1]))
+    print("------------------------------------------------")
+    print("População final: ")
     for individual in population:
-        print(individual, fitness(individual))
+        print("Individuo: ", individual, "\tAptidao:", fitness(individual))
+    with open('saida.txt', 'w') as file:
+        file.write(f"Resultado final:\n")
+        file.write(f"Melhor individuo:  {population[0]}\n")
+        file.write(f"Melhor aptidao:    {fitness(population[0])}\n")
+        file.write(f"Media de aptidao:  {sum([fitness(individual) for individual in population])/len(population)}\n")
+        file.write(f"Pior individuo:    {population[-1]}\n")
+        file.write(f"Pior aptidao:      {fitness(population[-1])}\n")
+        file.write(f"------------------------------------------------\n")
+        file.write(f"Populacao final: \n")
+        for individual in population:
+            file.write("Individuo: %s\tAptidao: %s\n" % (individual, fitness(individual)))
