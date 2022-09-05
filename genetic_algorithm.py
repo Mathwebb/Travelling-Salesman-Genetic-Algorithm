@@ -63,8 +63,8 @@ def tournament_selection(population, selection_size, tournament_size):
 # Realiza o crossover de dois indivíduos
 def crossover(parent1, parent2):
     child = []
-    childP1 = []
-    childP2 = []
+    child_p1 = []
+    child_p2 = []
     # Gera um ponto de corte aleatório, ou seja, dois genes aleatórios que serão
     # utilizados para pegar uma fatia do indivíduo 1
     gene1 = int(random.random() * len(parent1))
@@ -74,12 +74,12 @@ def crossover(parent1, parent2):
     endGene = max(gene1, gene2)
     # Pega a fatia gerada pelos pontos de corte do indivíduo 1 e adiciona a primeira parte do filho
     for i in range(startGene, endGene):
-        childP1.append(parent1[i])
+        child_p1.append(parent1[i])
     # Gera uma fatia com os genes do indivíduo 2 que não estão presentes na fatia do indivíduo 1
-    childP2 = [item for item in parent2 if item not in childP1]
+    child_p2 = [item for item in parent2 if item not in child_p1]
     # Pega os genes do indivíduo 2 que não estão na fatia do indivíduo 1 e adiciona ao filho
     # Como é o problema do caixeiro viajante é possível garantir que todos os genes estarão presentes no filho
-    child = childP1 + childP2
+    child = child_p1 + child_p2
     return child
 
 
