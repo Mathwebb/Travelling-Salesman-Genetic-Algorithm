@@ -118,8 +118,25 @@ def generate_new_population(population, selection_size, mutation_rate, elite_siz
     return new_population
 
 
+# Verifica se a população atingiu a estagnação
+def check_stagnation(population, stagnation_percentage, generation):
+    pop = population.copy()
+    pop.sort(key=fitness, reverse=True)
+    best_fitness = fitness(population[0])
+    best_pops = 1
+    for individual in pop:
+        if fitness(individual) == best_fitness:
+            best_pops += 1
+    # Verifica se a porcentagem de indivíduos com a melhor aptidão é maior que a porcentagem de estagnação
+    # Caso seja, o algoritmo é encerrado
+    if best_pops/len(pop) >= stagnation_percentage:
+        print("\nGerações: ", generation)
+        return True
+    return False
+
+
 # Executa o algoritmo genético para o problema do caixeiro viajante
-def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size, tournament_size, generations, estagnation_percentage=0.65):
+def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size, tournament_size, generations, stagnation_percentage=0.65):
     resume_execution = True
     for i in range(generations):
         if resume_execution:
@@ -138,17 +155,7 @@ def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size
             print("------------------------------------------------")
         # Gera uma nova população a cada geração do algoritmo genético
         population = generate_new_population(population, selection_size, mutation_rate, elite_size, tournament_size)
-        pop = population.copy()
-        pop.sort(key=fitness, reverse=True)
-        best_fitness = fitness(population[0])
-        best_pops = 1
-        for individual in pop:
-            if fitness(individual) == best_fitness:
-                best_pops += 1
-        # Verifica se a porcentagem de indivíduos com a melhor aptidão é maior que a porcentagem de estagnação
-        # Caso seja, o algoritmo é encerrado
-        if best_pops/len(pop) >= estagnation_percentage:
-            print("\nGerações: ", i)
+        if check_stagnation(population, stagnation_percentage, i):
             return population
     print("\nGerações: ", generations)
     return population
