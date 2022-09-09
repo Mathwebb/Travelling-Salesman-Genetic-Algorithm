@@ -1,5 +1,6 @@
 import random
 from math import inf
+import matplotlib.pyplot as plt
 
 class Graph:
     def __init__(self, size):
@@ -136,16 +137,19 @@ def check_stagnation(population, stagnation_percentage, generation):
 
 
 # Executa o algoritmo genético para o problema do caixeiro viajante
-def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size, tournament_size, generations, stagnation_percentage=0.65):
+def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size, tournament_size, generations, stagnation_percentage=0.6):
     resume_execution = True
     for i in range(generations):
+        if i % 100 == 0:
+            print("Geração: ", i)
+        pop = population.copy()
+        pop.sort(key=fitness, reverse=True)
+        population_bests.append(pop[0])
         if resume_execution:
             tecla = input("Pressione R para resumir a execução, Enter para continuar a visualização: ")
             if tecla == 'r' or tecla == 'R':
                 resume_execution = False
                 continue
-            pop = population.copy()
-            pop.sort(key=fitness, reverse=True)
             print("Geração: ", i)
             print("Melhor indivíduo: ", pop[0])
             print("Melhor aptidão: ", fitness(pop[0]))
@@ -161,22 +165,30 @@ def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size
     return population
 
 
+def generate_graph(size):
+    graph = Graph(size)
+    for i in range(1, size+1):
+        for j in range(i+1, size+1):
+            graph.add_edge(i, j, random.randint(10, 100))
+    return graph
+
+
 if __name__ == "__main__":
-    graph = Graph(6)
-    graph.add_edge(1, 2, 10)
-    graph.add_edge(1, 3, 12)
-    graph.add_edge(1, 5, 11)
-    graph.add_edge(2, 4, 5)
-    graph.add_edge(2, 6, 45)
-    graph.add_edge(3, 4, 90)
-    graph.add_edge(3, 5, 26)
-    graph.add_edge(3, 6, 5)
-    graph.add_edge(4, 5, 4)
-    graph.add_edge(4, 6, 25)
-    graph.add_edge(5, 6, 8)
+    # graph = Graph(5)
+    # graph.add_edge(1, 2, 2)
+    # graph.add_edge(1, 4, 3)
+    # graph.add_edge(1, 5, 6)
+    # graph.add_edge(2, 3, 4)
+    # graph.add_edge(2, 4, 3)
+    # graph.add_edge(3, 4, 7)
+    # graph.add_edge(3, 5, 3)
+    # graph.add_edge(4, 5, 3)
+
+    graph = generate_graph(10)
     
-    population = population_generator(100, graph)
-    population = travelling_salesman_GA(population, 50, 0.01, 6, 10, 10000, 0.65)
+    population_bests = []
+    population = population_generator(10, graph)
+    population = travelling_salesman_GA(population, selection_size=5, mutation_rate=0.01, elite_size=1, tournament_size=3, generations=1000, stagnation_percentage=0.65)
     population.sort(key=fitness, reverse=True)
     print("Resultado final:")
     print("Melhor indivíduo: ", population[0])
@@ -199,3 +211,7 @@ if __name__ == "__main__":
         file.write(f"Populacao final: \n")
         for individual in population:
             file.write("Individuo: %s\tAptidao: %s\n" % (individual, fitness(individual)))
+    plt.plot([1//fitness(individual) for individual in population_bests])
+    plt.ylabel('Distancia')
+    plt.xlabel('Geração')
+    plt.show()
