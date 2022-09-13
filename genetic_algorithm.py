@@ -56,8 +56,8 @@ def population_generator(size, graph):
 def tournament_selection(population, selection_size, tournament_size):
     selected = []
     for i in range(selection_size):
-        tounament = random.sample(population, tournament_size)
-        selected.append(max(tounament, key=fitness))
+        tournament = random.sample(population, tournament_size)
+        selected.append(max(tournament, key=fitness))
     return selected
 
 
@@ -140,8 +140,6 @@ def check_stagnation(population, stagnation_percentage, generation):
 def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size, tournament_size, generations, stagnation_percentage=0.6):
     resume_execution = True
     for i in range(generations):
-        if i % 100 == 0:
-            print("Geração: ", i)
         pop = population.copy()
         pop.sort(key=fitness, reverse=True)
         population_bests.append(pop[0])
@@ -151,11 +149,13 @@ def travelling_salesman_GA(population, selection_size, mutation_rate, elite_size
                 resume_execution = False
                 continue
             print("Geração: ", i)
+            print("Média de aptidão: ", sum([fitness(individual) for individual in pop])/len(pop))
             print("Melhor indivíduo: ", pop[0])
             print("Melhor aptidão: ", fitness(pop[0]))
-            print("Média de aptidão: ", sum([fitness(individual) for individual in pop])/len(pop))
+            print("Menor distância: ", 1/fitness(pop[0]) if fitness(pop[0]) != 0 else inf)
             print("Pior indivíduo: ", pop[-1])
             print("Pior aptidão: ", fitness(pop[-1]))
+            print("Maior distância: ", 1/fitness(pop[-1]) if fitness(pop[-1]) != 0 else inf)
             print("------------------------------------------------")
         # Gera uma nova população a cada geração do algoritmo genético
         population = generate_new_population(population, selection_size, mutation_rate, elite_size, tournament_size)
@@ -174,44 +174,49 @@ def generate_graph(size):
 
 
 if __name__ == "__main__":
-    # graph = Graph(5)
-    # graph.add_edge(1, 2, 2)
-    # graph.add_edge(1, 4, 3)
-    # graph.add_edge(1, 5, 6)
-    # graph.add_edge(2, 3, 4)
-    # graph.add_edge(2, 4, 3)
-    # graph.add_edge(3, 4, 7)
-    # graph.add_edge(3, 5, 3)
-    # graph.add_edge(4, 5, 3)
+    graph = Graph(5)
+    graph.add_edge(1, 2, 2)
+    graph.add_edge(1, 4, 3)
+    graph.add_edge(1, 5, 6)
+    graph.add_edge(2, 3, 4)
+    graph.add_edge(2, 4, 3)
+    graph.add_edge(3, 4, 7)
+    graph.add_edge(3, 5, 3)
+    graph.add_edge(4, 5, 3)
 
-    graph = generate_graph(10)
+    # graph = generate_graph(10)
     
     population_bests = []
     population = population_generator(10, graph)
-    population = travelling_salesman_GA(population, selection_size=5, mutation_rate=0.01, elite_size=1, tournament_size=3, generations=1000, stagnation_percentage=0.65)
+    print("População inicial: ", population)
+    population = travelling_salesman_GA(population, selection_size=5, mutation_rate=0.01, elite_size=1, tournament_size=3, generations=50, stagnation_percentage=1.8)
     population.sort(key=fitness, reverse=True)
     print("Resultado final:")
+    print("Média de aptidão: ", sum([fitness(individual) for individual in population])/len(population))
     print("Melhor indivíduo: ", population[0])
     print("Melhor aptidão: ", fitness(population[0]))
-    print("Média de aptidão: ", sum([fitness(individual) for individual in population])/len(population))
+    print("Menor distância: ", 1/fitness(population[0]))
     print("Pior indivíduo: ", population[-1])
     print("Pior aptidão: ", fitness(population[-1]))
+    print("Menor distância: ", 1/fitness(population[-1]) if fitness(population[-1]) != 0 else inf)
     print("------------------------------------------------")
     print("População final: ")
     for individual in population:
         print("Individuo: ", individual, "\tAptidao:", fitness(individual))
     with open('saida.txt', 'w') as file:
         file.write(f"Resultado final:\n")
+        file.write(f"Media de aptidao:  {sum([fitness(individual) for individual in population])/len(population)}\n")
         file.write(f"Melhor individuo:  {population[0]}\n")
         file.write(f"Melhor aptidao:    {fitness(population[0])}\n")
-        file.write(f"Media de aptidao:  {sum([fitness(individual) for individual in population])/len(population)}\n")
+        file.write(f"Menor distancia:    {1/fitness(population[0])}\n")
         file.write(f"Pior individuo:    {population[-1]}\n")
         file.write(f"Pior aptidao:      {fitness(population[-1])}\n")
+        file.write(f"Menor distancia:    {1/fitness(population[-1]) if fitness(population[-1]) != 0 else inf}\n")
         file.write(f"------------------------------------------------\n")
         file.write(f"Populacao final: \n")
         for individual in population:
-            file.write("Individuo: %s\tAptidao: %s\n" % (individual, fitness(individual)))
-    plt.plot([1//fitness(individual) for individual in population_bests])
+            file.write(f"Individuo: {individual}\tAptidao: {fitness(individual)}\tDistancia: {1/fitness(individual) if fitness(individual) != 0 else inf}\n")
+    plt.plot([1/fitness(individual) for individual in population_bests])
     plt.ylabel('Distancia')
     plt.xlabel('Geração')
     plt.show()
